@@ -1,0 +1,153 @@
+<!DOCTYPE html><html lang="es"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Legal-RAG-2025 - Inicio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "on-secondary-container": "#4e6953",
+                        "tertiary-fixed": "#cfe6f4",
+                        "surface-variant": "#e4e2e1",
+                        "surface": "#fbf9f8",
+                        "tertiary-fixed-dim": "#b3cad8",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#cceacf",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#303030",
+                        "primary-fixed-dim": "#abcae5",
+                        "on-surface-variant": "#42474c",
+                        "on-tertiary-fixed-variant": "#344a55",
+                        "on-secondary-fixed": "#062010",
+                        "primary": "#415f76",
+                        "on-tertiary-fixed": "#061e29",
+                        "background": "#fbf9f8",
+                        "on-tertiary-container": "#fbfcff",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#dcd9d9",
+                        "secondary-container": "#c9e7cc",
+                        "secondary-fixed-dim": "#b0ceb4",
+                        "surface-container": "#f0eded",
+                        "tertiary-container": "#627884",
+                        "on-primary-container": "#fcfcff",
+                        "primary-container": "#5a7890",
+                        "on-secondary-fixed-variant": "#334d38",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#abcae5",
+                        "on-primary-fixed-variant": "#2b4a60",
+                        "surface-container-high": "#eae8e7",
+                        "secondary": "#4a654f",
+                        "surface-bright": "#fbf9f8",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#495f6b",
+                        "on-background": "#1b1c1c",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#c2c7cd",
+                        "on-primary-fixed": "#001e2f",
+                        "surface-tint": "#446279",
+                        "primary-fixed": "#cae6ff",
+                        "on-surface": "#1b1c1c",
+                        "inverse-on-surface": "#f3f0f0",
+                        "error": "#ba1a1a",
+                        "outline": "#73787d",
+                        "surface-container-highest": "#e4e2e1",
+                        "surface-container-low": "#f6f3f2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "container-padding": "24px",
+                        "gutter": "16px",
+                        "stack-lg": "48px",
+                        "stack-sm": "12px",
+                        "stack-md": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Public Sans"],
+                        "button": ["Public Sans"],
+                        "body-lg": ["Public Sans"],
+                        "headline-sm": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "headline-lg": ["Public Sans"],
+                        "label-lg": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "button": ["18px", { "lineHeight": "1.0", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["20px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "label-lg": ["14px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col antialiased">
+<!-- TopAppBar -->
+<header class="bg-surface/90 dark:bg-surface-dim/90 backdrop-blur-md docked full-width top-0 sticky z-50 border-b border-outline-variant/30 shadow-sm shadow-primary/10">
+<div class="flex justify-between items-center w-full px-container-padding py-stack-sm max-w-full">
+<div class="flex items-center gap-2"><span class="font-['Public_Sans'] font-semibold text-[#5D7B93] text-[26px] tracking-tight">AMPARA</span></div>
+<div class="flex items-center gap-gutter">
+<span class="text-on-surface-variant font-body-md hidden md:inline-block">Anónimo</span>
+<button class="bg-[#E57373] hover:bg-[#ef5350] text-white px-4 py-2 rounded-lg font-button text-button transition-colors flex items-center gap-2 shadow-sm">
+  <span class="material-symbols-outlined">logout</span>
+  SALIDA RÁPIDA
+</button>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-grow flex flex-col items-center justify-center p-container-padding">
+<div class="w-full max-w-3xl mx-auto flex flex-col items-center text-center gap-stack-lg">
+<!-- Hero Section -->
+<section class="flex flex-col items-center gap-stack-md">
+<div class="bg-secondary-container text-on-secondary-container p-4 rounded-full inline-flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: &quot;FILL&quot; 1;">balance</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-primary max-w-2xl">
+                    Orientación legal sobre violencia familiar en el Perú
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+                    No necesitas registrarte para iniciar una consulta. Tu privacidad es nuestra prioridad.
+                </p>
+</section>
+<!-- Actions -->
+<section class="flex flex-col sm:flex-row gap-gutter w-full justify-center max-w-md">
+<button class="bg-primary hover:bg-surface-tint text-on-primary font-button text-button h-[56px] px-8 rounded-xl transition-colors shadow-[0_4px_12px_rgba(93,123,147,0.15)] flex-1">
+                    Entendido, iniciar consulta
+                </button>
+<button class="border-2 border-primary text-primary hover:bg-surface-container-low font-button text-button h-[56px] px-8 rounded-xl transition-colors flex-1">
+                    Ver preguntas frecuentes
+                </button>
+</section>
+<!-- Legal Disclaimer Card -->
+<section class="mt-8 bg-surface-container-lowest border border-surface-container-highest p-6 rounded-xl shadow-[0_2px_10px_rgba(93,123,147,0.1)] w-full max-w-2xl text-left flex items-start gap-4">
+<span class="material-symbols-outlined text-on-surface-variant mt-1">info</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-2">Aviso Legal</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        Este sistema brinda orientación legal informativa. No reemplaza la asesoría legal profesional ni la atención de emergencia.
+                    </p>
+</div>
+</section>
+</div>
+</main>
+<!-- SideNavBar / BottomNavBar Suppressed on Linear/Transactional Start Page -->
+
+
+</body></html>

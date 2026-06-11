@@ -1,0 +1,201 @@
+<!DOCTYPE html><html class="light" lang="es"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Preguntas Frecuentes - Legal-RAG-2025</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "on-secondary-container": "#4e6953",
+                        "tertiary-fixed": "#cfe6f4",
+                        "surface-variant": "#e4e2e1",
+                        "surface": "#fbf9f8",
+                        "tertiary-fixed-dim": "#b3cad8",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#cceacf",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#303030",
+                        "primary-fixed-dim": "#abcae5",
+                        "on-surface-variant": "#42474c",
+                        "on-tertiary-fixed-variant": "#344a55",
+                        "on-secondary-fixed": "#062010",
+                        "primary": "#415f76",
+                        "on-tertiary-fixed": "#061e29",
+                        "background": "#fbf9f8",
+                        "on-tertiary-container": "#fbfcff",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#dcd9d9",
+                        "secondary-container": "#c9e7cc",
+                        "secondary-fixed-dim": "#b0ceb4",
+                        "surface-container": "#f0eded",
+                        "tertiary-container": "#627884",
+                        "on-primary-container": "#fcfcff",
+                        "primary-container": "#5a7890",
+                        "on-secondary-fixed-variant": "#334d38",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#abcae5",
+                        "on-primary-fixed-variant": "#2b4a60",
+                        "surface-container-high": "#eae8e7",
+                        "secondary": "#4a654f",
+                        "surface-bright": "#fbf9f8",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#495f6b",
+                        "on-background": "#1b1c1c",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#c2c7cd",
+                        "on-primary-fixed": "#001e2f",
+                        "surface-tint": "#446279",
+                        "primary-fixed": "#cae6ff",
+                        "on-surface": "#1b1c1c",
+                        "inverse-on-surface": "#f3f0f0",
+                        "error": "#ba1a1a",
+                        "outline": "#73787d",
+                        "surface-container-highest": "#e4e2e1",
+                        "surface-container-low": "#f6f3f2",
+                        "accent-danger": "#E57373"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "container-padding": "24px",
+                        "gutter": "16px",
+                        "stack-lg": "48px",
+                        "stack-sm": "12px",
+                        "stack-md": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Public Sans"],
+                        "button": ["Public Sans"],
+                        "body-lg": ["Public Sans"],
+                        "headline-sm": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "headline-lg": ["Public Sans"],
+                        "label-lg": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "button": ["18px", { "lineHeight": "1.0", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["20px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "label-lg": ["14px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col pb-24 md:pb-0">
+<!-- TopAppBar -->
+<header class="bg-surface/90 backdrop-blur-md text-primary font-headline-sm text-headline-sm docked full-width top-0 sticky z-50 border-b border-outline-variant/30 shadow-sm shadow-primary/10 flex justify-between items-center w-full px-container-padding py-stack-sm max-w-full md:hidden">
+<div class="font-headline-md text-headline-md font-bold text-primary"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgcng9IjgiIGZpbGw9IiNlOGVhZWQiLz48cGF0aCBkPSJNMTcwIDEzMCBsMzAgNDAgbDIwLTE1IGw0MCA1NSBIMTQweiIgZmlsbD0iI2JkYzFjNiIvPjxjaXJjbGUgY3g9IjI1MCIgY3k9IjEyMCIgcj0iMTgiIGZpbGw9IiNiZGMxYzYiLz48L3N2Zz4=" alt="Ampara Logo" class="h-10 w-auto"></div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:bg-surface-container-high transition-colors p-2 rounded-full hidden">Anónimo</button>
+<button class="bg-accent-danger text-on-error font-button text-button px-4 py-2 rounded-full shadow-sm">SALIDA RÁPIDA</button>
+</div>
+</header>
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex flex-col h-screen py-stack-md gap-stack-sm bg-surface-container-low border-r border-outline-variant h-full w-64 fixed left-0 top-0">
+<div class="px-container-padding pb-stack-md">
+<div class="font-headline-sm text-headline-sm text-primary font-bold">Admin Panel</div>
+<div class="font-body-md text-body-md text-on-surface-variant">Legal-RAG Management</div>
+</div>
+<a class="text-on-surface-variant hover:bg-surface-container-highest mx-2 rounded-lg p-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-highest mx-2 rounded-lg p-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="folder_shared">folder_shared</span>
+<span class="font-body-md text-body-md">Indexación</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-highest mx-2 rounded-lg p-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-body-md text-body-md">Reportes</span>
+</a>
+<a class="text-on-surface-variant hover:bg-surface-container-highest mx-2 rounded-lg p-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span class="font-body-md text-body-md">Seguridad</span>
+</a>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full max-w-3xl mx-auto px-container-padding py-stack-lg md:ml-64 md:px-12">
+<div class="mb-stack-lg">
+<h1 class="font-headline-lg text-headline-lg text-primary mb-2">Preguntas Frecuentes</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Selecciona un tema para recibir orientación inmediata.</p>
+</div>
+<!-- FAQ Categories Bento Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter mb-stack-lg">
+<button class="bg-surface-container-low border border-outline-variant/50 rounded-xl p-4 flex items-center justify-between text-left hover:bg-surface-container-high transition-colors shadow-[0_2px_8px_rgba(93,123,147,0.05)] h-16">
+<span class="font-button text-button text-on-surface">Ley 30364</span>
+<span class="material-symbols-outlined text-primary" data-icon="gavel">gavel</span>
+</button>
+<button class="bg-surface-container-low border border-outline-variant/50 rounded-xl p-4 flex items-center justify-between text-left hover:bg-surface-container-high transition-colors shadow-[0_2px_8px_rgba(93,123,147,0.05)] h-16">
+<span class="font-button text-button text-on-surface">Tipos de violencia</span>
+<span class="material-symbols-outlined text-primary" data-icon="warning">warning</span>
+</button>
+<button class="bg-surface-container-low border border-outline-variant/50 rounded-xl p-4 flex items-center justify-between text-left hover:bg-surface-container-high transition-colors shadow-[0_2px_8px_rgba(93,123,147,0.05)] h-16">
+<span class="font-button text-button text-on-surface">Medidas de protección</span>
+<span class="material-symbols-outlined text-primary" data-icon="shield">shield</span>
+</button>
+<button class="bg-surface-container-low border border-outline-variant/50 rounded-xl p-4 flex items-center justify-between text-left hover:bg-surface-container-high transition-colors shadow-[0_2px_8px_rgba(93,123,147,0.05)] h-16">
+<span class="font-button text-button text-on-surface">Dónde denunciar</span>
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+</button>
+<button class="bg-surface-container-low border border-outline-variant/50 rounded-xl p-4 flex items-center justify-between text-left hover:bg-surface-container-high transition-colors shadow-[0_2px_8px_rgba(93,123,147,0.05)] h-16">
+<span class="font-button text-button text-on-surface">Línea 100</span>
+<span class="material-symbols-outlined text-primary" data-icon="call">call</span>
+</button>
+<button class="bg-surface-container-low border border-outline-variant/50 rounded-xl p-4 flex items-center justify-between text-left hover:bg-surface-container-high transition-colors shadow-[0_2px_8px_rgba(93,123,147,0.05)] h-16">
+<span class="font-button text-button text-on-surface">CEM</span>
+<span class="material-symbols-outlined text-primary" data-icon="support_agent">support_agent</span>
+</button>
+</div>
+<!-- Quick Exit Floating Button (Mobile Only, if needed beyond TopAppBar) -->
+<button class="fixed bottom-24 right-6 bg-accent-danger text-on-error font-button text-button w-14 h-14 rounded-full shadow-lg flex items-center justify-center z-50 md:hidden">
+<span class="material-symbols-outlined" data-icon="exit_to_app">exit_to_app</span>
+</button>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="bg-surface shadow-[0_-4px_12px_rgba(65,95,118,0.08)] fixed bottom-0 w-full z-50 rounded-t-xl md:hidden">
+<div class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high p-2 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="balance">balance</span>
+<span class="font-label-lg text-label-lg mt-1">Orientación</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-6 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="shield" style="font-variation-settings: 'FILL' 1;">shield</span>
+<span class="font-label-lg text-label-lg mt-1">Recursos</span>
+</a>
+
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high p-2 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-lg text-label-lg mt-1">Ajustes</span>
+</a>
+</div>
+</nav>
+
+
+</body></html>
