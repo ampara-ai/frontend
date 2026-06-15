@@ -1,12 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { UserTopNav } from '../components/UserNavigation'
-import { sendChatMessage, type ChatResponse } from '../lib/api'
+import {
+  streamChatMessage,
+  clearSession,
+  getSessionId,
+  getSourceIcon,
+  type Source,
+  type DoneEvent,
+} from '../lib/api'
 
 type ChatMessageItem = {
   id: string
   role: 'assistant' | 'user'
   content: string
-  resources?: ChatResponse['resources']
+  sources?: Source[]
+  isStreaming?: boolean
+  statusMessage?: string
+  out_of_domain?: boolean
+  no_results?: boolean
+  from_context?: boolean
 }
 
 const suggestedQuestions = [
@@ -168,31 +180,100 @@ function SuggestedQuestionCarousel({
   )
 }
 
-function ResourceCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: string
-  title: string
-  description: string
-}) {
+function SourceCard({ source }: { source: Source }) {
   return (
     <div className="mt-2 flex flex-col gap-2 rounded-xl border border-outline-variant/50 bg-surface p-3 shadow-sm">
       <div className="flex items-start gap-3">
         <div className="shrink-0 rounded-full bg-secondary-container p-2 text-on-secondary-container">
-          <span className="material-symbols-outlined">{icon}</span>
-        </div>
-        <div>
-          <span className="block font-label-lg text-label-lg text-on-surface">
-            {title}
+          <span className="material-symbols-outlined">
+            {getSourceIcon(source.source_type)}
           </span>
-          <span className="block font-body-md text-sm text-on-surface-variant">
-            {description}
+        </div>
+        <div className="min-w-0">
+          <span className="block font-label-lg text-label-lg text-on-surface">
+            {source.source_label}
+          </span>
+          <span className="block font-body-md text-sm text-on-surface-variant line-clamp-2">
+            {source.excerpt}
           </span>
         </div>
       </div>
     </div>
+  )
+}
+
+function renderAssistantBody(message: ChatMessageItem) {
+  if (message.isStreaming && !message.content && message.statusMessage) {
+    return (
+      <div className="flex items-center gap-2 text-on-surface-variant">
+        <span className="material-symbols-outlined animate-pulse text-sm text-primary">
+          more_horiz
+        </span>
+        <span className="font-label-lg text-sm">{message.statusMessage}</span>
+      </div>
+    )
+  }
+
+  if (message.isStreaming && !message.content) {
+    return (
+      <div className="flex items-center gap-2 text-on-surface-variant">
+        <span className="material-symbols-outlined animate-pulse text-sm text-primary">
+          more_horiz
+        </span>
+        <span className="font-label-lg text-sm">Procesando...</span>
+      </div>
+    )
+  }
+
+  if (message.out_of_domain) {
+    return (
+      <div className="flex items-start gap-2 rounded-lg bg-surface-container p-3">
+        <span className="material-symbols-outlined shrink-0 text-on-surface-variant">
+          info
+        </span>
+        <p className="m-0 font-body-md text-body-md text-on-surface-variant">
+          Solo puedo responder preguntas sobre violencia familiar y protección
+          legal en el Perú.
+        </p>
+      </div>
+    )
+  }
+
+  if (message.no_results) {
+    return (
+      <>
+        {message.content ? (
+          <p className="m-0 font-body-md text-body-md">{message.content}</p>
+        ) : null}
+        <div className="flex items-start gap-2 rounded-lg bg-surface-container p-3">
+          <span className="material-symbols-outlined shrink-0 text-on-surface-variant">
+            search_off
+          </span>
+          <p className="m-0 font-body-md text-sm text-on-surface-variant">
+            No encontré documentos relevantes para tu consulta. Intenta
+            reformular la pregunta.
+          </p>
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <>
+      <p className="m-0 font-body-md text-body-md">{message.content}</p>
+      {message.from_context && !message.sources?.length ? (
+        <div className="mt-1 flex items-center gap-1 text-xs text-on-surface-variant">
+          <span className="material-symbols-outlined text-[14px]">history</span>
+          <span>Respuesta basada en la conversación</span>
+        </div>
+      ) : null}
+      {message.sources?.map((source) => (
+        <SourceCard
+          key={`${source.source_type}::${source.source_label}`}
+          source={source}
+        />
+      ))}
+    </>
   )
 }
 
@@ -220,31 +301,19 @@ function ChatMessage({ message }: { message: ChatMessageItem }) {
             </span>
           </div>
         ) : null}
-        <p className="m-0 font-body-md text-body-md">{message.content}</p>
-        {message.resources?.map((resource) => (
-          <ResourceCard key={resource.title} {...resource} />
-        ))}
+
+        {isUser ? (
+          <p className="m-0 font-body-md text-body-md">{message.content}</p>
+        ) : (
+          renderAssistantBody(message)
+        )}
+
         {message.id === 'welcome' ? (
           <div className="mt-2 flex items-center gap-1 text-sm text-on-surface-variant">
             <span className="material-symbols-outlined text-[16px]">lock</span>
             <span>Tu sesión es anónima y no se guardará.</span>
           </div>
         ) : null}
-      </div>
-    </div>
-  )
-}
-
-function TypingIndicator() {
-  return (
-    <div className="mx-auto mt-2 flex w-full max-w-3xl justify-start">
-      <div className="flex w-auto items-center gap-2 rounded-full border border-outline-variant/30 bg-surface-container-low px-4 py-2 shadow-sm">
-        <span className="material-symbols-outlined animate-pulse text-sm text-primary">
-          more_horiz
-        </span>
-        <span className="font-label-lg text-sm text-on-surface-variant">
-          Escribiendo...
-        </span>
       </div>
     </div>
   )
@@ -379,6 +448,21 @@ export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessageItem[]>(initialMessages)
   const [draft, setDraft] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort()
+    }
+  }, [])
+
+  useEffect(() => {
+    const el = scrollContainerRef.current
+    if (el) {
+      el.scrollTop = el.scrollHeight
+    }
+  }, [messages])
 
   async function handleSubmit() {
     const trimmedDraft = draft.trim()
@@ -393,23 +477,76 @@ export function ChatPage() {
       content: trimmedDraft,
     }
 
-    setMessages((currentMessages) => [...currentMessages, userMessage])
+    const assistantId = crypto.randomUUID()
+    const assistantPlaceholder: ChatMessageItem = {
+      id: assistantId,
+      role: 'assistant',
+      content: '',
+      isStreaming: true,
+    }
+
+    setMessages((prev) => [...prev, userMessage, assistantPlaceholder])
     setDraft('')
     setIsLoading(true)
 
-    try {
-      const response = await sendChatMessage({ message: trimmedDraft })
+    const controller = new AbortController()
+    abortControllerRef.current = controller
 
-      setMessages((currentMessages) => [
-        ...currentMessages,
+    function patchMessage(patch: Partial<ChatMessageItem>) {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === assistantId ? { ...m, ...patch } : m)),
+      )
+    }
+
+    try {
+      await streamChatMessage(
+        { session_id: getSessionId(), message: trimmedDraft },
         {
-          id: response.id,
-          role: 'assistant',
-          content: response.message,
-          resources: response.resources,
+          onStatus({ message }) {
+            patchMessage({ statusMessage: message })
+          },
+          onToken({ content }) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId
+                  ? { ...m, content: m.content + content, statusMessage: undefined }
+                  : m,
+              ),
+            )
+          },
+          onDone(done: DoneEvent) {
+            patchMessage({
+              isStreaming: false,
+              statusMessage: undefined,
+              sources: done.sources,
+              from_context: done.from_context,
+              out_of_domain: done.out_of_domain,
+              no_results: done.no_results,
+              ...(done.no_results
+                ? { content: done.answer }
+                : done.out_of_domain
+                  ? { content: '' }
+                  : {}),
+            })
+            setIsLoading(false)
+          },
+          onError({ detail }) {
+            patchMessage({
+              isStreaming: false,
+              statusMessage: undefined,
+              content: detail,
+            })
+            setIsLoading(false)
+          },
         },
-      ])
-    } finally {
+        controller.signal,
+      )
+    } catch {
+      patchMessage({
+        isStreaming: false,
+        statusMessage: undefined,
+        content: 'Error al conectar con el servidor.',
+      })
       setIsLoading(false)
     }
   }
@@ -418,7 +555,10 @@ export function ChatPage() {
     setDraft(question)
   }
 
-  function handleClear() {
+  async function handleClear() {
+    abortControllerRef.current?.abort()
+    abortControllerRef.current = null
+    await clearSession()
     setMessages(initialMessages)
     setDraft('')
     setIsLoading(false)
@@ -428,7 +568,10 @@ export function ChatPage() {
     <div className="chat-page flex h-dvh min-h-dvh flex-col overflow-hidden bg-background font-body-md text-body-md text-on-background antialiased">
       <UserTopNav active="orientation" onClear={handleClear} />
 
-      <main className="min-h-0 flex-1 overflow-y-auto px-container-padding py-stack-md">
+      <main
+        ref={scrollContainerRef}
+        className="min-h-0 flex-1 overflow-y-auto px-container-padding py-stack-md"
+      >
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-stack-md">
           {messages.length === 1 ? (
             <section className="hidden pb-2 pt-4 text-center md:block">
@@ -454,7 +597,6 @@ export function ChatPage() {
           {messages.map((message) => (
             <ChatMessage key={message.id} message={message} />
           ))}
-          {isLoading ? <TypingIndicator /> : null}
           <SafetyNotice />
           <div className="h-4" />
         </div>
