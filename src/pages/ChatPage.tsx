@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { UserTopNav } from '../components/UserNavigation'
 import {
   streamChatMessage,
@@ -259,20 +260,51 @@ function renderAssistantBody(message: ChatMessageItem) {
   }
 
   return (
+    <AssistantNormalBody message={message} />
+  )
+}
+
+function AssistantNormalBody({ message }: { message: ChatMessageItem }) {
+  const [sourcesOpen, setSourcesOpen] = useState(false)
+  const sourceCount = message.sources?.length ?? 0
+
+  return (
     <>
-      <p className="m-0 font-body-md text-body-md">{message.content}</p>
-      {message.from_context && !message.sources?.length ? (
+      <div className="markdown-content font-body-md text-body-md">
+        <ReactMarkdown>{message.content}</ReactMarkdown>
+      </div>
+      {message.from_context && !sourceCount ? (
         <div className="mt-1 flex items-center gap-1 text-xs text-on-surface-variant">
           <span className="material-symbols-outlined text-[14px]">history</span>
           <span>Respuesta basada en la conversación</span>
         </div>
       ) : null}
-      {message.sources?.map((source) => (
-        <SourceCard
-          key={`${source.source_type}::${source.source_label}`}
-          source={source}
-        />
-      ))}
+      {sourceCount > 0 ? (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => setSourcesOpen((prev) => !prev)}
+            className="flex items-center gap-1 text-xs text-on-surface-variant transition-colors hover:text-on-surface"
+          >
+            <span className="material-symbols-outlined text-[14px]">
+              {sourcesOpen ? 'expand_less' : 'expand_more'}
+            </span>
+            {sourcesOpen
+              ? 'Ocultar fuentes'
+              : `Ver ${sourceCount} fuente${sourceCount > 1 ? 's' : ''} citada${sourceCount > 1 ? 's' : ''}`}
+          </button>
+          {sourcesOpen ? (
+            <div className="mt-1">
+              {message.sources!.map((source) => (
+                <SourceCard
+                  key={`${source.source_type}::${source.source_label}`}
+                  source={source}
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </>
   )
 }
@@ -374,6 +406,12 @@ function ChatInput({
             rows={2}
             value={value}
             onChange={(event) => onChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                if (canSend) onSubmit()
+              }
+            }}
           />
           <button
             type="submit"
@@ -414,6 +452,12 @@ function ChatInput({
             rows={1}
             value={value}
             onChange={(event) => onChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                if (canSend) onSubmit()
+              }
+            }}
           />
           <button
             type="submit"

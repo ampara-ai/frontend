@@ -266,3 +266,62 @@ code {
 .pb-safe {
   padding-bottom: max(env(safe-area-inset-bottom), 12px);
 }
+
+.markdown-content {
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+.markdown-content p {
+  margin: 0 0 0.5rem 0;
+}
+
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0.25rem 0 0.5rem 1.25rem;
+  padding: 0;
+}
+
+.markdown-content li {
+  margin-bottom: 0.2rem;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  font-weight: 600;
+  margin: 0.75rem 0 0.25rem 0;
+  line-height: 1.3;
+}
+
+.markdown-content h1 { font-size: 1.1rem; }
+.markdown-content h2 { font-size: 1.05rem; }
+.markdown-content h3 { font-size: 1rem; }
+
+.markdown-content code {
+  background: rgba(0,0,0,0.06);
+  border-radius: 3px;
+  padding: 0.1em 0.3em;
+  font-size: 0.9em;
+  font-family: monospace;
+}
+
+.markdown-content blockquote {
+  border-left: 3px solid currentColor;
+  opacity: 0.8;
+  margin: 0.5rem 0;
+  padding-left: 0.75rem;
+}
