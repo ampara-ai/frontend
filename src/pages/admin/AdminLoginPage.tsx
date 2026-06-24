@@ -5,26 +5,28 @@ import { paths } from '../../lib/routes'
 
 export function AdminLoginPage() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   if (isAdminAuthenticated()) {
     return <Navigate to={paths.admin} replace />
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
+    setLoading(true)
 
-    const didLogin = loginAdmin(email.trim(), password)
-
-    if (!didLogin) {
+    try {
+      await loginAdmin(username.trim(), password)
+      navigate(paths.admin, { replace: true })
+    } catch {
       setError('Credenciales administrativas incorrectas.')
-      return
+    } finally {
+      setLoading(false)
     }
-
-    navigate(paths.admin, { replace: true })
   }
 
   return (
@@ -35,7 +37,7 @@ export function AdminLoginPage() {
             AMPARA Admin
           </p>
           <p className="mt-2 font-body-md text-body-md text-on-surface-variant">
-            Ingresa con credenciales de desarrollo para acceder al panel.
+            Ingresa con tus credenciales de administrador.
           </p>
         </div>
 
@@ -44,10 +46,12 @@ export function AdminLoginPage() {
             Usuario
             <input
               className="h-12 rounded-lg border border-outline-variant bg-surface-container-low px-4 font-body-md text-body-md outline-none transition-colors focus:border-primary"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="admin@ampara.local"
+              type="text"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              placeholder="admin"
+              autoComplete="username"
+              required
             />
           </label>
           <label className="flex flex-col gap-2 font-label-lg text-label-lg text-on-surface">
@@ -57,7 +61,9 @@ export function AdminLoginPage() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="Admin123!"
+              placeholder="••••••••"
+              autoComplete="current-password"
+              required
             />
           </label>
 
@@ -69,9 +75,10 @@ export function AdminLoginPage() {
 
           <button
             type="submit"
-            className="mt-2 h-12 rounded-lg bg-primary font-button text-button text-on-primary transition-colors hover:bg-surface-tint"
+            disabled={loading}
+            className="mt-2 h-12 rounded-lg bg-primary font-button text-button text-on-primary transition-colors hover:bg-surface-tint disabled:cursor-wait disabled:opacity-70"
           >
-            Entrar al panel
+            {loading ? 'Verificando...' : 'Entrar al panel'}
           </button>
         </form>
       </main>

@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { type ChangeEvent, useMemo, useRef, useState } from 'react'
 
 import { MaterialIcon } from '../../components/MaterialIcon'
+import { type UploadResponse, uploadDocument } from '../../lib/adminApi'
 
 type DocumentStatus = 'activo' | 'procesando' | 'pendiente' | 'error'
 
@@ -71,7 +72,6 @@ export function AdminIndexacionPage() {
   const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'done'>(
     'idle',
   )
-  const [selectedFile, setSelectedFile] = useState<string | null>(null)
 
   const filteredDocuments = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
@@ -88,10 +88,6 @@ export function AdminIndexacionPage() {
   function handleSync() {
     setSyncState('syncing')
     window.setTimeout(() => setSyncState('done'), 900)
-  }
-
-  function handleSelectFile() {
-    setSelectedFile('Nuevo_documento_normativo.pdf')
   }
 
   const syncLabel =
@@ -118,10 +114,7 @@ export function AdminIndexacionPage() {
 
       <section className="grid min-w-0 grid-cols-1 gap-stack-md 2xl:grid-cols-[0.82fr_minmax(0,1.18fr)]">
         <div className="flex min-w-0 flex-col gap-stack-md">
-          <UploadCard
-            selectedFile={selectedFile}
-            onSelectFile={handleSelectFile}
-          />
+          <UploadCard />
 
           <IndexingStatusCard queueItems={queueItems} />
 
@@ -149,19 +142,59 @@ export function AdminIndexacionPage() {
   )
 }
 
-function UploadCard({
-  selectedFile,
-  onSelectFile,
-}: {
-  selectedFile: string | null
-  onSelectFile: () => void
-}) {
+type UploadState = 'idle' | 'uploading' | 'success' | 'error'
+
+function UploadCard() {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploadState, setUploadState] = useState<UploadState>('idle')
+  const [uploadResult, setUploadResult] = useState<UploadResponse | null>(null)
+  const [uploadError, setUploadError] = useState('')
+
+  function handleSelectFile() {
+    fileInputRef.current?.click()
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null
+    setSelectedFile(file)
+    setUploadState('idle')
+    setUploadResult(null)
+    setUploadError('')
+  }
+
+  async function handleUpload() {
+    if (!selectedFile) return
+    setUploadState('uploading')
+    setUploadResult(null)
+    setUploadError('')
+
+    try {
+      const result = await uploadDocument(selectedFile)
+      setUploadResult(result)
+      setUploadState('success')
+      setSelectedFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    } catch (err) {
+      setUploadError((err as Error).message)
+      setUploadState('error')
+    }
+  }
+
   return (
     <section className="min-w-0 rounded-xl border border-surface-variant bg-surface p-5 shadow-[0_4px_20px_rgba(65,95,118,0.05)] md:p-6">
       <h2 className="flex items-center gap-2 text-xl font-bold text-primary">
         <MaterialIcon name="upload_file" className="h-6 w-6 text-[24px]" />
         Cargar documento
       </h2>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        className="sr-only"
+        onChange={handleFileChange}
+      />
 
       <div className="mt-4 flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-outline-variant bg-surface-container-lowest p-6 text-center transition-colors hover:bg-surface-container-low">
         <MaterialIcon
@@ -175,20 +208,52 @@ function UploadCard({
         <button
           type="button"
           className="mt-4 rounded-xl border-2 border-primary px-6 py-2 text-base font-bold text-primary transition-colors hover:bg-primary-container hover:text-on-primary-container"
-          onClick={onSelectFile}
+          onClick={handleSelectFile}
+          disabled={uploadState === 'uploading'}
         >
           Explorar Archivos
         </button>
         <p className="mt-4 text-sm font-semibold text-outline">
           Soporta PDF, DOCX (Max 50MB)
         </p>
+
         {selectedFile ? (
           <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-secondary-container px-3 py-1 text-sm font-bold text-secondary">
             <MaterialIcon name="draft" className="h-4 w-4 text-[17px]" />
-            {selectedFile}
+            {selectedFile.name}
           </p>
         ) : null}
       </div>
+
+      {selectedFile && uploadState !== 'uploading' ? (
+        <button
+          type="button"
+          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-6 py-3 text-base font-bold text-on-secondary transition-colors hover:bg-secondary/90"
+          onClick={handleUpload}
+        >
+          <MaterialIcon name="upload" className="h-5 w-5 text-[20px]" />
+          Subir documento
+        </button>
+      ) : null}
+
+      {uploadState === 'uploading' ? (
+        <p className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-on-surface-variant">
+          <MaterialIcon name="progress_activity" className="h-4 w-4 text-[16px]" />
+          Subiendo y procesando documento...
+        </p>
+      ) : null}
+
+      {uploadState === 'success' && uploadResult ? (
+        <p className="mt-4 rounded-lg bg-secondary-container px-4 py-3 text-sm font-semibold text-on-secondary-container">
+          ✓ &quot;{uploadResult.filename}&quot; indexado — {uploadResult.chunks_created} fragmentos añadidos al RAG
+        </p>
+      ) : null}
+
+      {uploadState === 'error' ? (
+        <p className="mt-4 rounded-lg bg-error-container px-4 py-3 text-sm font-semibold text-on-error-container">
+          ✗ {uploadError}
+        </p>
+      ) : null}
     </section>
   )
 }
