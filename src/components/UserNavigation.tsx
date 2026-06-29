@@ -146,14 +146,6 @@ export function UserBottomNav({ active }: UserBottomNavProps) {
           </span>
           <span className="mt-1 font-label-lg text-label-lg">Recursos</span>
         </Link>
-        <button
-          type="button"
-          className="flex flex-col items-center justify-center rounded-lg p-2 text-on-surface-variant opacity-70"
-          aria-label="Ajustes no disponibles"
-        >
-          <span className="material-symbols-outlined">settings</span>
-          <span className="mt-1 font-label-lg text-label-lg">Ajustes</span>
-        </button>
       </div>
     </nav>
   )

@@ -179,3 +179,18 @@ const SOURCE_TYPE_ICONS: Record<string, string> = {
 export function getSourceIcon(sourceType: string): string {
   return SOURCE_TYPE_ICONS[sourceType] ?? 'description'
 }
+
+export async function submitFeedback(
+  sessionId: string,
+  rating: 'positive' | 'negative',
+): Promise<void> {
+  try {
+    await fetch(`${BASE_URL}/api/v1/chat/feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, rating }),
+    })
+  } catch {
+    // non-blocking — feedback failure should not affect UX
+  }
+}

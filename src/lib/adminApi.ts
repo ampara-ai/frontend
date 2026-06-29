@@ -47,6 +47,46 @@ async function adminFetch(url: string, options: RequestInit = {}): Promise<Respo
   return res
 }
 
+export interface DashboardResponse {
+  metrics: {
+    avg_latency_ms: number
+    total_queries: number
+    error_rate_pct: number
+  }
+  services: {
+    rag_api: 'online' | 'degraded' | 'offline'
+    inference_service: 'online' | 'degraded' | 'offline'
+  }
+}
+
+export interface QueueItem {
+  filename: string
+  progress_pct: number
+  status: 'active' | 'processing' | 'pending' | 'error'
+  message: string
+}
+
+export async function getDashboard(): Promise<DashboardResponse> {
+  const res = await adminFetch(`${BASE_URL}/api/v1/admin/dashboard`)
+  if (!res.ok) throw new Error('Error al cargar el dashboard')
+  return res.json() as Promise<DashboardResponse>
+}
+
+export async function getDocumentsQueue(): Promise<QueueItem[]> {
+  const res = await adminFetch(`${BASE_URL}/api/v1/admin/documents/queue`)
+  if (!res.ok) throw new Error('Error al cargar la cola de indexación')
+  const data: { queue: QueueItem[] } = await res.json()
+  return data.queue
+}
+
+export async function syncKnowledgeBase(): Promise<{ success: boolean; message: string }> {
+  const res = await adminFetch(`${BASE_URL}/api/v1/admin/knowledge-base/sync`, {
+    method: 'POST',
+  })
+  if (!res.ok) throw new Error('Error al sincronizar la base de conocimientos')
+  return res.json()
+}
+
 export async function uploadDocument(file: File): Promise<UploadResponse> {
   const formData = new FormData()
   formData.append('file', file)

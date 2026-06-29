@@ -1,93 +1,38 @@
-import { type ChangeEvent, useMemo, useRef, useState } from 'react'
+import { type ChangeEvent, useEffect, useRef, useState } from 'react'
 
 import { MaterialIcon } from '../../components/MaterialIcon'
-import { type UploadResponse, uploadDocument } from '../../lib/adminApi'
+import {
+  type QueueItem,
+  type UploadResponse,
+  getDocumentsQueue,
+  syncKnowledgeBase,
+  uploadDocument,
+} from '../../lib/adminApi'
 
-type DocumentStatus = 'activo' | 'procesando' | 'pendiente' | 'error'
-
-type IndexedDocument = {
-  name: string
-  type: 'pdf' | 'docx'
-  uploadedAt: string
-  status: DocumentStatus
-}
-
-type QueueItem = {
-  name: string
-  progress: number
-  status: DocumentStatus
-  message: string
-}
-
-const indexedDocuments: IndexedDocument[] = [
-  {
-    name: 'Ley_30364_actualizada.pdf',
-    type: 'pdf',
-    uploadedAt: '24 Oct 2023',
-    status: 'activo',
-  },
-  {
-    name: 'Guia_Atencion_CEM_2023.docx',
-    type: 'docx',
-    uploadedAt: '22 Oct 2023',
-    status: 'activo',
-  },
-  {
-    name: 'Reglamento_Ley_30364.pdf',
-    type: 'pdf',
-    uploadedAt: '15 Oct 2023',
-    status: 'procesando',
-  },
-  {
-    name: 'Jurisprudencia_Violencia_Familiar_2022.pdf',
-    type: 'pdf',
-    uploadedAt: '10 Oct 2023',
-    status: 'activo',
-  },
-]
-
-const queueItems: QueueItem[] = [
-  {
-    name: 'Ley_30364_actualizada.pdf',
-    progress: 100,
-    status: 'activo',
-    message: 'Indexado con exito',
-  },
-  {
-    name: 'Reglamento_Ley_30364.pdf',
-    progress: 64,
-    status: 'procesando',
-    message: 'Extrayendo fragmentos normativos',
-  },
-  {
-    name: 'Protocolos_CEM_2024.docx',
-    progress: 15,
-    status: 'pendiente',
-    message: 'En cola de procesamiento',
-  },
-]
+type DocumentStatus = 'active' | 'processing' | 'pending' | 'error'
 
 export function AdminIndexacionPage() {
-  const [query, setQuery] = useState('')
-  const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'done'>(
-    'idle',
-  )
+  const [queueItems, setQueueItems] = useState<QueueItem[]>([])
+  const [queueLoading, setQueueLoading] = useState(true)
+  const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'done' | 'error'>('idle')
 
-  const filteredDocuments = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase()
+  useEffect(() => {
+    getDocumentsQueue()
+      .then(setQueueItems)
+      .catch(() => {})
+      .finally(() => setQueueLoading(false))
+  }, [])
 
-    if (!normalizedQuery) {
-      return indexedDocuments
-    }
-
-    return indexedDocuments.filter((document) =>
-      document.name.toLowerCase().includes(normalizedQuery),
-    )
-  }, [query])
-
-  function handleSync() {
+  async function handleSync() {
     setSyncState('syncing')
-    window.setTimeout(() => setSyncState('done'), 900)
+    try {
+      await syncKnowledgeBase()
+      setSyncState('done')
+      const updated = await getDocumentsQueue().catch(() => queueItems)
+      setQueueItems(updated)
+    } catch {
+      setSyncState('error')
+    }
   }
 
   const syncLabel =
@@ -95,7 +40,9 @@ export function AdminIndexacionPage() {
       ? 'Actualizando base...'
       : syncState === 'done'
         ? 'Base actualizada'
-        : 'Actualizar base de conocimientos'
+        : syncState === 'error'
+          ? 'Error al sincronizar'
+          : 'Actualizar base de conocimientos'
 
   return (
     <div className="w-full min-w-0 overflow-x-hidden space-y-stack-lg">
@@ -112,32 +59,22 @@ export function AdminIndexacionPage() {
         </p>
       </header>
 
-      <section className="grid min-w-0 grid-cols-1 gap-stack-md 2xl:grid-cols-[0.82fr_minmax(0,1.18fr)]">
-        <div className="flex min-w-0 flex-col gap-stack-md">
-          <UploadCard />
-
-          <IndexingStatusCard queueItems={queueItems} />
-
-          <button
-            type="button"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-base font-bold text-on-primary shadow-[0_4px_14px_rgba(65,95,118,0.2)] transition-colors hover:bg-primary/90 disabled:cursor-wait disabled:opacity-80"
-            onClick={handleSync}
-            disabled={syncState === 'syncing'}
-          >
-            <MaterialIcon
-              name={syncState === 'syncing' ? 'progress_activity' : 'sync'}
-              className="h-5 w-5 text-[21px]"
-            />
-            {syncLabel}
-          </button>
-        </div>
-
-        <SourceTable
-          documents={filteredDocuments}
-          query={query}
-          onQueryChange={setQuery}
-        />
-      </section>
+      <div className="flex max-w-2xl flex-col gap-stack-md">
+        <UploadCard />
+        <IndexingStatusCard queueItems={queueItems} loading={queueLoading} />
+        <button
+          type="button"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-base font-bold text-on-primary shadow-[0_4px_14px_rgba(65,95,118,0.2)] transition-colors hover:bg-primary/90 disabled:cursor-wait disabled:opacity-80"
+          onClick={handleSync}
+          disabled={syncState === 'syncing'}
+        >
+          <MaterialIcon
+            name={syncState === 'syncing' ? 'progress_activity' : 'sync'}
+            className="h-5 w-5 text-[21px]"
+          />
+          {syncLabel}
+        </button>
+      </div>
     </div>
   )
 }
@@ -258,7 +195,13 @@ function UploadCard() {
   )
 }
 
-function IndexingStatusCard({ queueItems }: { queueItems: QueueItem[] }) {
+function IndexingStatusCard({
+  queueItems,
+  loading,
+}: {
+  queueItems: QueueItem[]
+  loading: boolean
+}) {
   return (
     <section className="min-w-0 rounded-xl border border-secondary-fixed bg-secondary-container p-5 shadow-[0_4px_20px_rgba(78,105,83,0.05)] md:p-6">
       <h2 className="flex items-center gap-2 text-xl font-bold text-on-secondary-container">
@@ -267,9 +210,19 @@ function IndexingStatusCard({ queueItems }: { queueItems: QueueItem[] }) {
       </h2>
 
       <div className="mt-4 space-y-3">
-        {queueItems.map((item) => (
-          <IndexingQueueItem key={item.name} item={item} />
-        ))}
+        {loading ? (
+          <p className="text-sm font-semibold text-on-secondary-container/60">
+            Cargando cola...
+          </p>
+        ) : queueItems.length === 0 ? (
+          <p className="text-sm font-semibold text-on-secondary-container/60">
+            No hay documentos en cola.
+          </p>
+        ) : (
+          queueItems.map((item) => (
+            <IndexingQueueItem key={item.filename} item={item} />
+          ))
+        )}
       </div>
     </section>
   )
@@ -284,7 +237,7 @@ function IndexingQueueItem({ item }: { item: QueueItem }) {
           className="h-5 w-5 text-[20px] text-secondary"
         />
         <span className="min-w-0 truncate font-semibold text-on-surface">
-          {item.name}
+          {item.filename}
         </span>
       </div>
 
@@ -292,17 +245,17 @@ function IndexingQueueItem({ item }: { item: QueueItem }) {
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-variant">
           <div
             className={`h-full rounded-full ${progressColor(item.status)}`}
-            style={{ width: `${item.progress}%` }}
+            style={{ width: `${item.progress_pct}%` }}
           />
         </div>
         <span className="text-sm font-bold text-secondary">
-          {item.progress}%
+          {item.progress_pct}%
         </span>
       </div>
 
       <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-secondary">
         <MaterialIcon
-          name={item.status === 'activo' ? 'done_all' : 'pending'}
+          name={item.status === 'active' ? 'done_all' : 'pending'}
           className="h-4 w-4 text-[16px]"
         />
         {item.message}
@@ -311,152 +264,9 @@ function IndexingQueueItem({ item }: { item: QueueItem }) {
   )
 }
 
-function SourceTable({
-  documents,
-  query,
-  onQueryChange,
-}: {
-  documents: IndexedDocument[]
-  query: string
-  onQueryChange: (value: string) => void
-}) {
-  return (
-    <section className="min-w-0 overflow-hidden rounded-xl border border-surface-variant bg-surface p-5 shadow-[0_4px_20px_rgba(65,95,118,0.05)] md:p-6">
-      <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <h2 className="flex min-w-0 items-center gap-2 text-xl font-bold text-primary">
-          <MaterialIcon name="library_books" className="h-6 w-6 text-[24px]" />
-          <span className="min-w-0 truncate">Documentos Indexados</span>
-        </h2>
-
-        <label className="relative block w-full min-w-0 lg:w-72 lg:shrink-0">
-          <span className="sr-only">Buscar documento</span>
-          <MaterialIcon
-            name="search"
-            className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[20px] text-outline"
-          />
-          <input
-            className="w-full rounded-lg border-0 bg-surface-container-low py-2 pl-10 pr-4 text-base text-on-surface outline-none transition-colors focus:bg-surface-container-lowest focus:ring-2 focus:ring-secondary"
-            placeholder="Buscar documento..."
-            type="search"
-            value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
-          />
-        </label>
-      </div>
-
-      <div className="mt-5 max-w-full overflow-x-auto">
-        <table className="w-full min-w-[720px] table-fixed border-collapse text-left">
-          <colgroup>
-            <col className="w-[42%]" />
-            <col className="w-[22%]" />
-            <col className="w-[18%]" />
-            <col className="w-[18%]" />
-          </colgroup>
-          <thead>
-            <tr className="border-b border-surface-variant text-sm font-bold uppercase tracking-wide text-on-surface-variant">
-              <th className="px-2 py-3">Nombre del Documento</th>
-              <th className="px-2 py-3">Fecha de Subida</th>
-              <th className="px-2 py-3">Estado</th>
-              <th className="px-2 py-3 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="text-base text-on-surface">
-            {documents.map((document) => (
-              <DocumentRow key={document.name} document={document} />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  )
-}
-
-function DocumentRow({ document }: { document: IndexedDocument }) {
-  return (
-    <tr className="border-b border-surface-variant/50 transition-colors last:border-b-0 hover:bg-surface-container-low">
-      <td className="px-2 py-4">
-        <div className="flex min-w-0 items-center gap-2">
-          <MaterialIcon
-            name={document.type === 'pdf' ? 'picture_as_pdf' : 'description'}
-            className="h-5 w-5 text-[20px] text-outline"
-          />
-          <span className="min-w-0 truncate">{document.name}</span>
-        </div>
-      </td>
-      <td className="px-2 py-4 text-on-surface-variant">
-        {document.uploadedAt}
-      </td>
-      <td className="px-2 py-4">
-        <StatusBadge status={document.status} />
-      </td>
-      <td className="px-2 py-4">
-        <div className="flex items-center justify-end gap-1">
-          <button
-            type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-outline transition-colors hover:bg-primary-container hover:text-primary"
-            aria-label={`Ver ${document.name}`}
-          >
-            <MaterialIcon name="visibility" className="h-5 w-5 text-[20px]" />
-          </button>
-          <button
-            type="button"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-outline transition-colors hover:bg-error-container hover:text-error"
-            aria-label={`Eliminar ${document.name}`}
-          >
-            <MaterialIcon name="delete" className="h-5 w-5 text-[20px]" />
-          </button>
-        </div>
-      </td>
-    </tr>
-  )
-}
-
-function StatusBadge({ status }: { status: DocumentStatus }) {
-  const statusConfig = {
-    activo: {
-      label: 'Activo',
-      className: 'bg-secondary-container text-on-secondary-container',
-      dot: 'bg-secondary',
-    },
-    procesando: {
-      label: 'Procesando',
-      className: 'bg-tertiary-fixed text-on-tertiary-fixed',
-      dot: 'bg-tertiary-container',
-    },
-    pendiente: {
-      label: 'Pendiente',
-      className: 'bg-surface-container-high text-on-surface-variant',
-      dot: 'bg-outline',
-    },
-    error: {
-      label: 'Error',
-      className: 'bg-error-container text-on-error-container',
-      dot: 'bg-error',
-    },
-  }[status]
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-bold ${statusConfig.className}`}
-    >
-      <span className={`h-2 w-2 rounded-full ${statusConfig.dot}`} />
-      {statusConfig.label}
-    </span>
-  )
-}
-
 function progressColor(status: DocumentStatus) {
-  if (status === 'error') {
-    return 'bg-error'
-  }
-
-  if (status === 'procesando') {
-    return 'bg-tertiary-container'
-  }
-
-  if (status === 'pendiente') {
-    return 'bg-outline'
-  }
-
+  if (status === 'error') return 'bg-error'
+  if (status === 'processing') return 'bg-tertiary-container'
+  if (status === 'pending') return 'bg-outline'
   return 'bg-secondary'
 }

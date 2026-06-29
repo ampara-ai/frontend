@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
+import { useSearchParams } from 'react-router-dom'
 import { UserTopNav } from '../components/UserNavigation'
 import {
   streamChatMessage,
   clearSession,
   getSessionId,
   getSourceIcon,
+  submitFeedback,
   type Source,
   type DoneEvent,
 } from '../lib/api'
@@ -266,7 +268,22 @@ function renderAssistantBody(message: ChatMessageItem) {
 
 function AssistantNormalBody({ message }: { message: ChatMessageItem }) {
   const [sourcesOpen, setSourcesOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [rating, setRating] = useState<'positive' | 'negative' | null>(null)
   const sourceCount = message.sources?.length ?? 0
+  const isComplete = !message.isStreaming && Boolean(message.content)
+
+  function handleCopy() {
+    navigator.clipboard.writeText(message.content).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  function handleRate(r: 'positive' | 'negative') {
+    setRating(r)
+    void submitFeedback(getSessionId(), r)
+  }
 
   return (
     <>
@@ -279,7 +296,82 @@ function AssistantNormalBody({ message }: { message: ChatMessageItem }) {
           <span>Respuesta basada en la conversación</span>
         </div>
       ) : null}
-      {sourceCount > 0 ? (
+      {isComplete ? (
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <div>
+            {sourceCount > 0 ? (
+              <button
+                type="button"
+                onClick={() => setSourcesOpen((prev) => !prev)}
+                className="flex items-center gap-1 text-xs text-on-surface-variant transition-colors hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined text-[14px]">
+                  {sourcesOpen ? 'expand_less' : 'expand_more'}
+                </span>
+                {sourcesOpen
+                  ? 'Ocultar fuentes'
+                  : `Ver ${sourceCount} fuente${sourceCount > 1 ? 's' : ''} citada${sourceCount > 1 ? 's' : ''}`}
+              </button>
+            ) : null}
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleCopy}
+              title="Copiar respuesta"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                {copied ? 'check' : 'content_copy'}
+              </span>
+            </button>
+            <button
+              type="button"
+              disabled={rating !== null}
+              onClick={() => handleRate('positive')}
+              title="Respuesta útil"
+              className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors disabled:cursor-default ${
+                rating === 'positive'
+                  ? 'text-secondary'
+                  : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+              }`}
+            >
+              <span
+                className="material-symbols-outlined text-[16px]"
+                style={
+                  rating === 'positive'
+                    ? { fontVariationSettings: '"FILL" 1' }
+                    : undefined
+                }
+              >
+                thumb_up
+              </span>
+            </button>
+            <button
+              type="button"
+              disabled={rating !== null}
+              onClick={() => handleRate('negative')}
+              title="Respuesta no útil"
+              className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors disabled:cursor-default ${
+                rating === 'negative'
+                  ? 'text-error'
+                  : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+              }`}
+            >
+              <span
+                className="material-symbols-outlined text-[16px]"
+                style={
+                  rating === 'negative'
+                    ? { fontVariationSettings: '"FILL" 1' }
+                    : undefined
+                }
+              >
+                thumb_down
+              </span>
+            </button>
+          </div>
+        </div>
+      ) : sourceCount > 0 ? (
         <div className="mt-2">
           <button
             type="button"
@@ -293,16 +385,16 @@ function AssistantNormalBody({ message }: { message: ChatMessageItem }) {
               ? 'Ocultar fuentes'
               : `Ver ${sourceCount} fuente${sourceCount > 1 ? 's' : ''} citada${sourceCount > 1 ? 's' : ''}`}
           </button>
-          {sourcesOpen ? (
-            <div className="mt-1">
-              {message.sources!.map((source) => (
-                <SourceCard
-                  key={`${source.source_type}::${source.source_label}`}
-                  source={source}
-                />
-              ))}
-            </div>
-          ) : null}
+        </div>
+      ) : null}
+      {sourcesOpen ? (
+        <div className="mt-1">
+          {message.sources!.map((source) => (
+            <SourceCard
+              key={`${source.source_type}::${source.source_label}`}
+              source={source}
+            />
+          ))}
         </div>
       ) : null}
     </>
@@ -478,6 +570,7 @@ function ChatInput({
 }
 
 export function ChatPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const initialMessages = useMemo<ChatMessageItem[]>(
     () => [
       {
@@ -494,6 +587,7 @@ export function ChatPage() {
   const [isLoading, setIsLoading] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const autoSentRef = useRef(false)
 
   useEffect(() => {
     return () => {
@@ -508,17 +602,21 @@ export function ChatPage() {
     }
   }, [messages])
 
-  async function handleSubmit() {
-    const trimmedDraft = draft.trim()
-
-    if (!trimmedDraft || isLoading) {
-      return
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (q && !autoSentRef.current) {
+      autoSentRef.current = true
+      setSearchParams({}, { replace: true })
+      void sendMessage(q)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
+  async function sendMessage(question: string) {
     const userMessage: ChatMessageItem = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: trimmedDraft,
+      content: question,
     }
 
     const assistantId = crypto.randomUUID()
@@ -530,7 +628,6 @@ export function ChatPage() {
     }
 
     setMessages((prev) => [...prev, userMessage, assistantPlaceholder])
-    setDraft('')
     setIsLoading(true)
 
     const controller = new AbortController()
@@ -544,7 +641,7 @@ export function ChatPage() {
 
     try {
       await streamChatMessage(
-        { session_id: getSessionId(), message: trimmedDraft },
+        { session_id: getSessionId(), message: question },
         {
           onStatus({ message }) {
             patchMessage({ statusMessage: message })
@@ -593,6 +690,13 @@ export function ChatPage() {
       })
       setIsLoading(false)
     }
+  }
+
+  async function handleSubmit() {
+    const trimmedDraft = draft.trim()
+    if (!trimmedDraft || isLoading) return
+    setDraft('')
+    await sendMessage(trimmedDraft)
   }
 
   function handleSuggestionSelect(question: string) {

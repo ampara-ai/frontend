@@ -5,9 +5,6 @@ import { paths } from '../lib/routes'
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage'
 import { AdminIndexacionPage } from '../pages/admin/AdminIndexacionPage'
 import { AdminLoginPage } from '../pages/admin/AdminLoginPage'
-import { AdminMetricasPage } from '../pages/admin/AdminMetricasPage'
-import { AdminReportesPage } from '../pages/admin/AdminReportesPage'
-import { AdminSeguridadPage } from '../pages/admin/AdminSeguridadPage'
 import { ChatPage } from '../pages/ChatPage'
 import { HomePage } from '../pages/HomePage'
 import { PreguntasFrecuentesPage } from '../pages/PreguntasFrecuentesPage'
@@ -51,18 +48,6 @@ const router = createBrowserRouter([
               {
                 path: paths.adminIndexacion,
                 element: <AdminIndexacionPage />,
-              },
-              {
-                path: paths.adminMetricas,
-                element: <AdminMetricasPage />,
-              },
-              {
-                path: paths.adminReportes,
-                element: <AdminReportesPage />,
-              },
-              {
-                path: paths.adminSeguridad,
-                element: <AdminSeguridadPage />,
               },
             ],
           },

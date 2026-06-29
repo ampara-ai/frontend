@@ -11,14 +11,6 @@ const adminLinks = [
     icon: 'folder_shared',
     end: false,
   },
-  { to: paths.adminMetricas, label: 'Metricas', icon: 'analytics', end: false },
-  { to: paths.adminReportes, label: 'Reportes', icon: 'summarize', end: false },
-  {
-    to: paths.adminSeguridad,
-    label: 'Seguridad',
-    icon: 'admin_panel_settings',
-    end: false,
-  },
 ] as const
 
 function AdminNavLink({

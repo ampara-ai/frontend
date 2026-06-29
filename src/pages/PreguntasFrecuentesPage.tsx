@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { UserBottomNav, UserTopNav } from '../components/UserNavigation'
 
 const faqItems = [
@@ -5,31 +6,37 @@ const faqItems = [
     title: 'Ley 30364',
     icon: 'gavel',
     description: 'Marco legal para prevenir, sancionar y erradicar la violencia familiar.',
+    prompt: '¿Qué es la Ley 30364 y qué protege?',
   },
   {
     title: 'Tipos de violencia',
     icon: 'warning',
     description: 'Física, psicológica, sexual y económica o patrimonial.',
+    prompt: '¿Cuáles son los tipos de violencia familiar según la ley peruana?',
   },
   {
     title: 'Medidas de protección',
     icon: 'shield',
     description: 'Acciones urgentes para reducir riesgos y proteger a la persona afectada.',
+    prompt: '¿Qué medidas de protección existen para víctimas de violencia familiar?',
   },
   {
     title: 'Dónde denunciar',
     icon: 'location_on',
     description: 'Comisarías, juzgados de familia y Centros Emergencia Mujer.',
+    prompt: '¿Dónde puedo denunciar violencia familiar en Perú?',
   },
   {
     title: 'Línea 100',
     icon: 'call',
     description: 'Servicio gratuito de orientación y ayuda frente a violencia familiar.',
+    prompt: '¿Qué es la Línea 100 y cómo me puede ayudar?',
   },
   {
     title: 'CEM',
     icon: 'support_agent',
     description: 'Atención psicológica, social y legal en Centros Emergencia Mujer.',
+    prompt: '¿Qué son los Centros Emergencia Mujer y qué servicios ofrecen?',
   },
 ]
 
@@ -52,14 +59,17 @@ function FaqCard({
   title,
   icon,
   description,
+  onClick,
 }: {
   title: string
   icon: string
   description: string
+  onClick: () => void
 }) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className="group flex min-h-16 flex-col gap-2 rounded-xl border border-outline-variant/50 bg-surface-container-low p-4 text-left shadow-[0_2px_8px_rgba(93,123,147,0.05)] transition-colors hover:bg-surface-container-high"
     >
       <div className="flex items-center justify-between gap-4">
@@ -76,6 +86,8 @@ function FaqCard({
 }
 
 export function PreguntasFrecuentesPage() {
+  const navigate = useNavigate()
+
   return (
     <div className="faq-page flex min-h-dvh flex-col bg-background pb-24 font-body-md text-on-background md:pb-0">
       <UserTopNav active="resources" />
@@ -91,7 +103,15 @@ export function PreguntasFrecuentesPage() {
 
         <section className="mb-stack-lg grid grid-cols-1 gap-gutter sm:grid-cols-2">
           {faqItems.map((item) => (
-            <FaqCard key={item.title} {...item} />
+            <FaqCard
+              key={item.title}
+              title={item.title}
+              icon={item.icon}
+              description={item.description}
+              onClick={() =>
+                navigate('/chat?q=' + encodeURIComponent(item.prompt))
+              }
+            />
           ))}
         </section>
       </main>

@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { paths } from '../lib/routes'
 
 function QuickExitButton() {
@@ -59,7 +60,15 @@ function BalanceIcon() {
   )
 }
 
-function MobileHomeContent() {
+function MobileHomeContent({
+  accepted,
+  onAccept,
+}: {
+  accepted: boolean
+  onAccept: (v: boolean) => void
+}) {
+  const navigate = useNavigate()
+
   return (
     <main className="mx-auto flex w-full max-w-md flex-grow flex-col px-container-padding pb-stack-lg pt-stack-md md:hidden">
       <section className="mb-stack-lg mt-stack-md flex flex-col items-center text-center">
@@ -117,28 +126,47 @@ function MobileHomeContent() {
       </section>
 
       <div className="mt-auto flex flex-col gap-4">
-        <Link
-          to={paths.chat}
-          className="flex h-[56px] w-full items-center justify-center gap-2 rounded-[16px] bg-primary font-button text-button text-on-primary shadow-[0_4px_12px_rgba(65,95,118,0.2)] transition-opacity hover:opacity-90"
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-low p-3">
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(e) => onAccept(e.target.checked)}
+            className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-primary"
+          />
+          <span className="font-body-md text-sm text-on-surface-variant">
+            He leido y acepto que esta herramienta no reemplaza asesoria legal
+            profesional ni atencion de emergencia.
+          </span>
+        </label>
+        <button
+          type="button"
+          disabled={!accepted}
+          onClick={() => navigate(paths.chat)}
+          className="flex h-[56px] w-full items-center justify-center gap-2 rounded-[16px] bg-primary font-button text-button text-on-primary shadow-[0_4px_12px_rgba(65,95,118,0.2)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Iniciar consulta
           <span className="material-symbols-outlined">arrow_forward</span>
-        </Link>
+        </button>
         <Link
           to={paths.preguntasFrecuentes}
           className="flex h-[56px] w-full items-center justify-center rounded-[16px] border-2 border-primary font-button text-button text-primary transition-colors hover:bg-surface-container-low"
         >
           Ver preguntas frecuentes
         </Link>
-        <p className="m-0 text-center font-label-lg text-label-lg text-outline">
-          Al iniciar, aceptas terminos y condiciones.
-        </p>
       </div>
     </main>
   )
 }
 
-function DesktopHomeContent() {
+function DesktopHomeContent({
+  accepted,
+  onAccept,
+}: {
+  accepted: boolean
+  onAccept: (v: boolean) => void
+}) {
+  const navigate = useNavigate()
+
   return (
     <main className="hidden flex-grow flex-col items-center justify-center p-container-padding md:flex">
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-stack-lg text-center">
@@ -155,13 +183,28 @@ function DesktopHomeContent() {
           </p>
         </section>
 
+        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-low px-5 py-3">
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(e) => onAccept(e.target.checked)}
+            className="h-5 w-5 shrink-0 cursor-pointer accent-primary"
+          />
+          <span className="font-body-md text-sm text-on-surface-variant">
+            He leido y acepto que esta herramienta no reemplaza asesoria legal
+            profesional ni atencion de emergencia.
+          </span>
+        </label>
+
         <section className="flex w-full max-w-md flex-col justify-center gap-gutter sm:flex-row">
-          <Link
-            to={paths.chat}
-            className="flex h-[56px] flex-1 items-center justify-center rounded-xl bg-primary px-8 font-button text-button text-on-primary shadow-[0_4px_12px_rgba(93,123,147,0.15)] transition-colors hover:bg-surface-tint"
+          <button
+            type="button"
+            disabled={!accepted}
+            onClick={() => navigate(paths.chat)}
+            className="flex h-[56px] flex-1 items-center justify-center rounded-xl bg-primary px-8 font-button text-button text-on-primary shadow-[0_4px_12px_rgba(93,123,147,0.15)] transition-colors hover:bg-surface-tint disabled:cursor-not-allowed disabled:opacity-40"
           >
             Entendido, iniciar consulta
-          </Link>
+          </button>
           <Link
             to={paths.preguntasFrecuentes}
             className="flex h-[56px] flex-1 items-center justify-center rounded-xl border-2 border-primary px-8 font-button text-button text-primary transition-colors hover:bg-surface-container-low"
@@ -190,11 +233,13 @@ function DesktopHomeContent() {
 }
 
 export function HomePage() {
+  const [accepted, setAccepted] = useState(false)
+
   return (
     <div className="home-page flex min-h-screen flex-col bg-background font-body-md text-on-surface antialiased">
       <HomeHeader />
-      <MobileHomeContent />
-      <DesktopHomeContent />
+      <MobileHomeContent accepted={accepted} onAccept={setAccepted} />
+      <DesktopHomeContent accepted={accepted} onAccept={setAccepted} />
     </div>
   )
 }
