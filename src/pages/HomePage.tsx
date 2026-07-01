@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { paths } from '../lib/routes'
 
@@ -60,13 +59,7 @@ function BalanceIcon() {
   )
 }
 
-function MobileHomeContent({
-  accepted,
-  onAccept,
-}: {
-  accepted: boolean
-  onAccept: (v: boolean) => void
-}) {
+function MobileHomeContent() {
   const navigate = useNavigate()
 
   return (
@@ -126,23 +119,10 @@ function MobileHomeContent({
       </section>
 
       <div className="mt-auto flex flex-col gap-4">
-        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-low p-3">
-          <input
-            type="checkbox"
-            checked={accepted}
-            onChange={(e) => onAccept(e.target.checked)}
-            className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-primary"
-          />
-          <span className="font-body-md text-sm text-on-surface-variant">
-            He leido y acepto que esta herramienta no reemplaza asesoria legal
-            profesional ni atencion de emergencia.
-          </span>
-        </label>
         <button
           type="button"
-          disabled={!accepted}
           onClick={() => navigate(paths.chat)}
-          className="flex h-[56px] w-full items-center justify-center gap-2 rounded-[16px] bg-primary font-button text-button text-on-primary shadow-[0_4px_12px_rgba(65,95,118,0.2)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-[56px] w-full items-center justify-center gap-2 rounded-[16px] bg-primary font-button text-button text-on-primary shadow-[0_4px_12px_rgba(65,95,118,0.2)] transition-opacity hover:opacity-90"
         >
           Iniciar consulta
           <span className="material-symbols-outlined">arrow_forward</span>
@@ -153,18 +133,16 @@ function MobileHomeContent({
         >
           Ver preguntas frecuentes
         </Link>
+        <p className="text-center font-body-md text-xs text-on-surface-variant/70">
+          Al iniciar una consulta, reconoces que esta orientacion no reemplaza
+          asesoria legal profesional ni atencion de emergencia.
+        </p>
       </div>
     </main>
   )
 }
 
-function DesktopHomeContent({
-  accepted,
-  onAccept,
-}: {
-  accepted: boolean
-  onAccept: (v: boolean) => void
-}) {
+function DesktopHomeContent() {
   const navigate = useNavigate()
 
   return (
@@ -183,27 +161,13 @@ function DesktopHomeContent({
           </p>
         </section>
 
-        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-low px-5 py-3">
-          <input
-            type="checkbox"
-            checked={accepted}
-            onChange={(e) => onAccept(e.target.checked)}
-            className="h-5 w-5 shrink-0 cursor-pointer accent-primary"
-          />
-          <span className="font-body-md text-sm text-on-surface-variant">
-            He leido y acepto que esta herramienta no reemplaza asesoria legal
-            profesional ni atencion de emergencia.
-          </span>
-        </label>
-
         <section className="flex w-full max-w-md flex-col justify-center gap-gutter sm:flex-row">
           <button
             type="button"
-            disabled={!accepted}
             onClick={() => navigate(paths.chat)}
-            className="flex h-[56px] flex-1 items-center justify-center rounded-xl bg-primary px-8 font-button text-button text-on-primary shadow-[0_4px_12px_rgba(93,123,147,0.15)] transition-colors hover:bg-surface-tint disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-[56px] flex-1 items-center justify-center rounded-xl bg-primary px-8 font-button text-button text-on-primary shadow-[0_4px_12px_rgba(93,123,147,0.15)] transition-colors hover:bg-surface-tint"
           >
-            Entendido, iniciar consulta
+            Iniciar consulta
           </button>
           <Link
             to={paths.preguntasFrecuentes}
@@ -212,6 +176,10 @@ function DesktopHomeContent({
             Ver preguntas frecuentes
           </Link>
         </section>
+        <p className="font-body-md text-xs text-on-surface-variant/70">
+          Al iniciar una consulta, reconoces que esta orientacion no reemplaza
+          asesoria legal profesional ni atencion de emergencia.
+        </p>
 
         <section className="mt-8 flex w-full max-w-2xl items-start gap-4 rounded-xl border border-surface-container-highest bg-surface-container-lowest p-6 text-left shadow-[0_2px_10px_rgba(93,123,147,0.1)]">
           <span className="material-symbols-outlined mt-1 text-on-surface-variant">
@@ -233,13 +201,11 @@ function DesktopHomeContent({
 }
 
 export function HomePage() {
-  const [accepted, setAccepted] = useState(false)
-
   return (
     <div className="home-page flex min-h-screen flex-col bg-background font-body-md text-on-surface antialiased">
       <HomeHeader />
-      <MobileHomeContent accepted={accepted} onAccept={setAccepted} />
-      <DesktopHomeContent accepted={accepted} onAccept={setAccepted} />
+      <MobileHomeContent />
+      <DesktopHomeContent />
     </div>
   )
 }
