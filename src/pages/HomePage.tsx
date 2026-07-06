@@ -33,9 +33,12 @@ function HomeHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-outline-variant/30 bg-surface/90 shadow-sm shadow-primary/10 backdrop-blur-md">
       <div className="flex w-full max-w-full items-center justify-between px-container-padding py-stack-sm">
         <div className="flex items-center gap-2">
-          <span className="font-['Public_Sans'] text-[26px] font-semibold leading-none tracking-tight text-[#5D7B93]">
+          <Link
+            to={paths.home}
+            className="font-['Public_Sans'] text-[26px] font-semibold leading-none tracking-tight text-[#5D7B93]"
+          >
             AMPARA
-          </span>
+          </Link>
         </div>
         <div className="flex items-center gap-4 md:gap-gutter">
           <span className="ml-4 font-body-md text-body-md text-on-surface-variant md:ml-0">

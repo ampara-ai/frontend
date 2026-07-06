@@ -74,6 +74,58 @@ export function AdminDashboardPage() {
         />
       </section>
 
+      {data?.usuarios ? (
+        <section className="rounded-2xl border border-surface-container-highest bg-surface p-5 shadow-[0_2px_18px_rgba(65,95,118,0.08)] md:p-6">
+          <h2 className="text-xl font-bold text-on-surface">Usuarios</h2>
+          <p className="mt-1 text-sm text-on-surface-variant">
+            Distribución de género y calificaciones de respuestas.
+          </p>
+          <div className="mt-5 grid grid-cols-1 gap-gutter md:grid-cols-2">
+            <div>
+              <p className="mb-3 text-sm font-semibold text-on-surface-variant">
+                Distribución de género
+              </p>
+              <GenderBar
+                label="Femenino"
+                value={data.usuarios.por_genero.femenino}
+                total={
+                  data.usuarios.por_genero.femenino +
+                  data.usuarios.por_genero.masculino +
+                  data.usuarios.por_genero.otros
+                }
+                barClass="bg-secondary"
+              />
+              <GenderBar
+                label="Masculino"
+                value={data.usuarios.por_genero.masculino}
+                total={
+                  data.usuarios.por_genero.femenino +
+                  data.usuarios.por_genero.masculino +
+                  data.usuarios.por_genero.otros
+                }
+                barClass="bg-primary"
+              />
+              <GenderBar
+                label="Otros"
+                value={data.usuarios.por_genero.otros}
+                total={
+                  data.usuarios.por_genero.femenino +
+                  data.usuarios.por_genero.masculino +
+                  data.usuarios.por_genero.otros
+                }
+                barClass="bg-tertiary"
+              />
+            </div>
+            <div>
+              <p className="mb-3 text-sm font-semibold text-on-surface-variant">
+                Calificaciones
+              </p>
+              <RatingStats calificaciones={data.usuarios.calificaciones} />
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <section className="rounded-2xl border border-surface-container-highest bg-surface p-5 shadow-[0_2px_18px_rgba(65,95,118,0.08)] md:p-6">
         <h2 className="text-xl font-bold text-on-surface">Estado del sistema</h2>
         <p className="mt-1 text-sm text-on-surface-variant">
@@ -164,6 +216,66 @@ const SERVICE_DOT: Record<ServiceState, string> = {
   online: 'bg-secondary',
   degraded: 'bg-tertiary',
   offline: 'bg-error',
+}
+
+function GenderBar({
+  label,
+  value,
+  total,
+  barClass,
+}: {
+  label: string
+  value: number
+  total: number
+  barClass: string
+}) {
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0
+  return (
+    <div className="mb-3">
+      <div className="mb-1 flex items-center justify-between text-xs">
+        <span className="text-on-surface-variant">{label}</span>
+        <span className="font-semibold text-on-surface">{value} ({pct}%)</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
+        <div
+          className={`h-full rounded-full transition-all ${barClass}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
+function RatingStats({
+  calificaciones,
+}: {
+  calificaciones: { utiles: number; no_utiles: number; sin_calificar: number }
+}) {
+  const total = calificaciones.utiles + calificaciones.no_utiles
+  const utilPct = total > 0 ? Math.round((calificaciones.utiles / total) * 100) : null
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between rounded-xl bg-surface-container-low px-4 py-3">
+        <span className="text-sm text-on-surface-variant">Tasa de utilidad</span>
+        <span className="text-lg font-bold text-secondary">
+          {utilPct !== null ? `${utilPct}%` : '—'}
+        </span>
+      </div>
+      <div className="flex items-center justify-between rounded-xl bg-surface-container-low px-4 py-3">
+        <span className="text-sm text-on-surface-variant">Utiles / No utiles</span>
+        <span className="text-sm font-semibold text-on-surface">
+          {calificaciones.utiles} / {calificaciones.no_utiles}
+        </span>
+      </div>
+      <div className="flex items-center justify-between rounded-xl bg-surface-container-low px-4 py-3">
+        <span className="text-sm text-on-surface-variant">Sin calificar</span>
+        <span className="text-sm font-semibold text-on-surface-variant">
+          {calificaciones.sin_calificar}
+        </span>
+      </div>
+    </div>
+  )
 }
 
 function SystemStatus({

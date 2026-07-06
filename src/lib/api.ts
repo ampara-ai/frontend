@@ -35,6 +35,7 @@ export interface ChatResponse {
   from_context: boolean
   out_of_domain: boolean
   no_results: boolean
+  consulta_id?: number | null
 }
 
 export interface StatusEvent {
@@ -180,17 +181,29 @@ export function getSourceIcon(sourceType: string): string {
   return SOURCE_TYPE_ICONS[sourceType] ?? 'description'
 }
 
-export async function submitFeedback(
+export async function registerGender(
   sessionId: string,
-  rating: 'positive' | 'negative',
+  genero: 'masculino' | 'femenino' | 'otros',
 ): Promise<void> {
   try {
-    await fetch(`${BASE_URL}/api/v1/chat/feedback`, {
+    await fetch(`${BASE_URL}/api/v1/session/${sessionId}/genero`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: sessionId, rating }),
+      body: JSON.stringify({ genero }),
     })
-  } catch {
-    // non-blocking — feedback failure should not affect UX
-  }
+  } catch { /* no-op */ }
+}
+
+export async function rateConsulta(
+  consultaId: number,
+  sessionId: string,
+  fueUtil: boolean,
+): Promise<void> {
+  try {
+    await fetch(`${BASE_URL}/api/v1/consulta/${consultaId}/rate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, fue_util: fueUtil }),
+    })
+  } catch { /* no-op */ }
 }

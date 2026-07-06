@@ -7,7 +7,8 @@ import {
   clearSession,
   getSessionId,
   getSourceIcon,
-  submitFeedback,
+  registerGender,
+  rateConsulta,
   type Source,
   type DoneEvent,
 } from '../lib/api'
@@ -22,6 +23,7 @@ type ChatMessageItem = {
   out_of_domain?: boolean
   no_results?: boolean
   from_context?: boolean
+  consulta_id?: number | null
 }
 
 const suggestedQuestions = [
@@ -50,6 +52,54 @@ const suggestedQuestions = [
     value: '¿Qué documentos necesito?',
   },
 ]
+
+function GenderModal({
+  onSelect,
+}: {
+  onSelect: (genero: 'masculino' | 'femenino' | 'otros') => void
+}) {
+  const options: { label: string; icon: string; value: 'masculino' | 'femenino' | 'otros' }[] = [
+    { label: 'Femenino', icon: 'female', value: 'femenino' },
+    { label: 'Masculino', icon: 'male', value: 'masculino' },
+    { label: 'Otros', icon: 'transgender', value: 'otros' },
+    { label: 'Prefiero no responder', icon: 'do_not_disturb_on', value: 'otros' },
+  ]
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim/50 px-container-padding backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-2xl border border-outline-variant/30 bg-surface p-6 shadow-[0_8px_32px_rgba(65,95,118,0.2)]">
+        <div className="mb-5 text-center">
+          <span
+            className="material-symbols-outlined text-4xl text-primary"
+            style={{ fontVariationSettings: '"FILL" 1' }}
+          >
+            waving_hand
+          </span>
+          <h2 className="mt-2 font-headline-sm text-headline-sm text-on-surface">
+            Antes de comenzar
+          </h2>
+          <p className="mt-1 font-body-md text-sm text-on-surface-variant">
+            ¿Cómo te identificas? Esta información es anónima y nos ayuda a
+            mejorar el servicio.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {options.map((opt) => (
+            <button
+              key={opt.label}
+              type="button"
+              onClick={() => onSelect(opt.value)}
+              className="flex flex-col items-center gap-2 rounded-xl border border-outline-variant/50 bg-surface-container p-4 text-center transition-colors hover:border-primary/30 hover:bg-surface-container-high"
+            >
+              <span className="material-symbols-outlined text-primary">{opt.icon}</span>
+              <span className="font-body-md text-sm text-on-surface">{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function SafetyNotice() {
   return (
@@ -269,9 +319,10 @@ function renderAssistantBody(message: ChatMessageItem) {
 function AssistantNormalBody({ message }: { message: ChatMessageItem }) {
   const [sourcesOpen, setSourcesOpen] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [rating, setRating] = useState<'positive' | 'negative' | null>(null)
+  const [rated, setRated] = useState(false)
   const sourceCount = message.sources?.length ?? 0
   const isComplete = !message.isStreaming && Boolean(message.content)
+  const showRating = isComplete && Boolean(message.consulta_id) && !message.out_of_domain
 
   function handleCopy() {
     navigator.clipboard.writeText(message.content).then(() => {
@@ -280,9 +331,10 @@ function AssistantNormalBody({ message }: { message: ChatMessageItem }) {
     })
   }
 
-  function handleRate(r: 'positive' | 'negative') {
-    setRating(r)
-    void submitFeedback(getSessionId(), r)
+  function handleRate(fueUtil: boolean) {
+    if (!message.consulta_id) return
+    setRated(true)
+    void rateConsulta(message.consulta_id, getSessionId(), fueUtil)
   }
 
   return (
@@ -325,50 +377,6 @@ function AssistantNormalBody({ message }: { message: ChatMessageItem }) {
                 {copied ? 'check' : 'content_copy'}
               </span>
             </button>
-            <button
-              type="button"
-              disabled={rating !== null}
-              onClick={() => handleRate('positive')}
-              title="Respuesta útil"
-              className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors disabled:cursor-default ${
-                rating === 'positive'
-                  ? 'text-secondary'
-                  : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
-              }`}
-            >
-              <span
-                className="material-symbols-outlined text-[16px]"
-                style={
-                  rating === 'positive'
-                    ? { fontVariationSettings: '"FILL" 1' }
-                    : undefined
-                }
-              >
-                thumb_up
-              </span>
-            </button>
-            <button
-              type="button"
-              disabled={rating !== null}
-              onClick={() => handleRate('negative')}
-              title="Respuesta no útil"
-              className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors disabled:cursor-default ${
-                rating === 'negative'
-                  ? 'text-error'
-                  : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
-              }`}
-            >
-              <span
-                className="material-symbols-outlined text-[16px]"
-                style={
-                  rating === 'negative'
-                    ? { fontVariationSettings: '"FILL" 1' }
-                    : undefined
-                }
-              >
-                thumb_down
-              </span>
-            </button>
           </div>
         </div>
       ) : sourceCount > 0 ? (
@@ -396,6 +404,33 @@ function AssistantNormalBody({ message }: { message: ChatMessageItem }) {
             />
           ))}
         </div>
+      ) : null}
+      {showRating ? (
+        rated ? (
+          <p className="mt-2 font-body-md text-xs text-on-surface-variant">
+            Gracias por tu calificacion
+          </p>
+        ) : (
+          <div className="mt-2 flex items-center gap-3">
+            <span className="font-body-md text-xs text-on-surface-variant">
+              ¿Esta respuesta fue util?
+            </span>
+            <button
+              type="button"
+              onClick={() => handleRate(true)}
+              className="rounded-full bg-secondary-container px-3 py-1 font-label-lg text-xs text-on-secondary-container transition-colors hover:bg-secondary/20"
+            >
+              Si
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRate(false)}
+              className="rounded-full border border-outline-variant/50 px-3 py-1 font-label-lg text-xs text-on-surface-variant transition-colors hover:bg-surface-container-high"
+            >
+              No
+            </button>
+          </div>
+        )
       ) : null}
     </>
   )
@@ -571,6 +606,10 @@ function ChatInput({
 
 export function ChatPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const sessionId = getSessionId()
+  const [showGenderModal, setShowGenderModal] = useState(
+    localStorage.getItem('ampara_gender_session') !== sessionId,
+  )
   const initialMessages = useMemo<ChatMessageItem[]>(
     () => [
       {
@@ -663,6 +702,7 @@ export function ChatPage() {
               from_context: done.from_context,
               out_of_domain: done.out_of_domain,
               no_results: done.no_results,
+              consulta_id: done.consulta_id ?? null,
               ...(done.no_results
                 ? { content: done.answer }
                 : done.out_of_domain
@@ -703,6 +743,12 @@ export function ChatPage() {
     setDraft(question)
   }
 
+  function handleGenderSelect(genero: 'masculino' | 'femenino' | 'otros') {
+    localStorage.setItem('ampara_gender_session', sessionId)
+    setShowGenderModal(false)
+    void registerGender(sessionId, genero)
+  }
+
   async function handleClear() {
     abortControllerRef.current?.abort()
     abortControllerRef.current = null
@@ -714,6 +760,9 @@ export function ChatPage() {
 
   return (
     <div className="chat-page flex h-dvh min-h-dvh flex-col overflow-hidden bg-background font-body-md text-body-md text-on-background antialiased">
+      {showGenderModal ? (
+        <GenderModal onSelect={handleGenderSelect} />
+      ) : null}
       <UserTopNav active="orientation" onClear={handleClear} />
 
       <main

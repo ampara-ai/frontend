@@ -57,6 +57,18 @@ export interface DashboardResponse {
     rag_api: 'online' | 'degraded' | 'offline'
     inference_service: 'online' | 'degraded' | 'offline'
   }
+  usuarios?: {
+    por_genero: {
+      masculino: number
+      femenino: number
+      otros: number
+    }
+    calificaciones: {
+      utiles: number
+      no_utiles: number
+      sin_calificar: number
+    }
+  }
 }
 
 export interface QueueItem {
