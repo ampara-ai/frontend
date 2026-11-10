@@ -1,19 +1,45 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
-const SESSION_KEY = 'ampara_session_id'
+// El id de sesión y la marca de la pregunta de género viven solo en memoria: recargar la página empieza una conversación
+// nueva (sección 3.6 del artículo) y no queda rastro de AMPARA en el almacenamiento del navegador si alguien revisa el
+// dispositivo. sessionStorage no basta: sobrevive a una recarga en la misma pestaña.
+const LEGACY_SESSION_KEY = 'ampara_session_id'
+const LEGACY_GENDER_KEY = 'ampara_gender_session'
+let sessionId: string | null = null
+let genderAskedFor: string | null = null
+
+// Versiones anteriores guardaban el id en localStorage: se borra y se pide al backend que olvide esa conversación.
+function forgetLegacySession(): void {
+  try {
+    const legacy = localStorage.getItem(LEGACY_SESSION_KEY)
+    localStorage.removeItem(LEGACY_SESSION_KEY)
+    localStorage.removeItem(LEGACY_GENDER_KEY)
+    if (legacy) {
+      void fetch(`${BASE_URL}/api/v1/session/${legacy}`, { method: 'DELETE' }).catch(() => {})
+    }
+  } catch {
+    // almacenamiento bloqueado por el navegador: no hay nada que limpiar
+  }
+}
+forgetLegacySession()
 
 export function getSessionId(): string {
-  let id = localStorage.getItem(SESSION_KEY)
-  if (!id) {
-    id = crypto.randomUUID()
-    localStorage.setItem(SESSION_KEY, id)
+  if (!sessionId) {
+    sessionId = crypto.randomUUID()
   }
-  return id
+  return sessionId
 }
 
 function rotateSessionId(): string {
-  const id = crypto.randomUUID()
-  localStorage.setItem(SESSION_KEY, id)
-  return id
+  sessionId = crypto.randomUUID()
+  return sessionId
+}
+
+export function genderAsked(id: string): boolean {
+  return genderAskedFor === id
+}
+
+export function markGenderAsked(id: string): void {
+  genderAskedFor = id
 }
 
 export interface Source {
@@ -150,7 +176,7 @@ export async function streamChatMessage(
 }
 
 export async function clearSession(): Promise<void> {
-  const oldId = localStorage.getItem(SESSION_KEY)
+  const oldId = sessionId
   if (oldId) {
     try {
       await fetch(`${BASE_URL}/api/v1/session/${oldId}`, { method: 'DELETE' })

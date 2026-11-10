@@ -5,7 +5,9 @@ import { UserTopNav } from '../components/UserNavigation'
 import {
   streamChatMessage,
   clearSession,
+  genderAsked,
   getSessionId,
+  markGenderAsked,
   getSourceIcon,
   registerGender,
   rateConsulta,
@@ -607,9 +609,7 @@ function ChatInput({
 export function ChatPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const sessionId = getSessionId()
-  const [showGenderModal, setShowGenderModal] = useState(
-    localStorage.getItem('ampara_gender_session') !== sessionId,
-  )
+  const [showGenderModal, setShowGenderModal] = useState(!genderAsked(sessionId))
   const initialMessages = useMemo<ChatMessageItem[]>(
     () => [
       {
@@ -744,7 +744,7 @@ export function ChatPage() {
   }
 
   function handleGenderSelect(genero: 'masculino' | 'femenino' | 'otros') {
-    localStorage.setItem('ampara_gender_session', sessionId)
+    markGenderAsked(sessionId)
     setShowGenderModal(false)
     void registerGender(sessionId, genero)
   }
